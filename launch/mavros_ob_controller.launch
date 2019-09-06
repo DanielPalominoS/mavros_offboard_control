@@ -1,0 +1,38 @@
+<launch>
+  <arg name="TakeoffHeight" default="120"/>
+
+  <arg name="DesiredGsd" default=""/>
+  <arg name="DesiredEndlap" default=""/>
+  <arg name="DesiredSidelap" default=""/>
+  <arg name="CamOri" default=""/>
+
+  <arg name="ImgWidth" default=""/>
+  <arg name="ImgHeight" default=""/>
+  <arg name="Fx" default=""/>
+  <arg name="Fy" default=""/>
+  <arg name="Cx" default=""/>
+  <arg name="Cy" default=""/>
+  <arg name="Skew" default=""/>
+  <arg name="FocalLength" default=""/>
+  <arg name="SensorWidth" default=""/>
+  <arg name="SensorHeight" default=""/>
+
+  <node name="mavros_offboard_control" pkg="mavros_offboard_control" type="mavros_offboard_control" clear_params="false" output="screen">
+    <param name="TakeoffHeight" value="$(arg TakeoffHeight)" />
+    <param name="DesiredGsd" value="$(arg DesiredGsd)" />
+    <param name="DesiredEndlap" value="$(arg DesiredEndlap)" />
+    <param name="DesiredSidelap" value="$(arg DesiredSidelap)" />
+    <param name="CamOri" value="$(arg CamOri)" />
+    <param name="ImgWidth" value="$(arg ImgWidth)" />
+    <param name="ImgHeight" value="$(arg ImgHeight)" />
+    <param name="Fx" value="$(arg Fx)" />
+    <param name="Fy" value="$(arg Fy)" />
+    <param name="Cx" value="$(arg Cx)" />
+    <param name="Cy" value="$(arg Cy)" />
+    <param name="Skew" value="$(arg Skew)" />
+    <param name="FocalLength" value="$(arg FocalLength)" />
+    <param name="SensorWidth" value="$(arg SensorWidth)" />
+    <param name="SensorHeight" value="$(arg SensorHeight)" />
+  </node>
+
+</launch>

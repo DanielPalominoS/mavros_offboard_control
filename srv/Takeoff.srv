@@ -1,0 +1,6 @@
+float32 goal_altitude
+bool  local_frame
+geometry_msgs/Vector3 uav_ref
+---
+bool  takeoff_completed
+float32 distance_to_goal

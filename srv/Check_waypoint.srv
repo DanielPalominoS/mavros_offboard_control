@@ -1,0 +1,12 @@
+float64 current_heading
+float64 desired_heading
+geometry_msgs/Vector3   uav_current_gps
+geometry_msgs/Vector3   uav_desired_gps
+bool are_degrees
+float64 distance_threshold
+float64 heading_angle_threshold
+---
+bool    waypoint_reached
+float64 distance
+float64 remaining_angle
+#bool    success
