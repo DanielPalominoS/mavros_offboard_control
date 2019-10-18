@@ -49,23 +49,6 @@ void check_takeoff_server::GpsCallback(const sensor_msgs::NavSatFixConstPtr& msg
     prev_gps=curr_gps;
   }
   curr_gps=*msg;
-
-  //double DesiredAltitude=request_.goal_altitude+request_.uav_ref.z;
-  /*ROS_INFO("Current altitude over sea level: ");std::cout<<CurrentPose.altitude<<std::endl;
-  std::cout<<"Reference altitude: "<<goal_.uav_ref.altitude<<std::endl;
-  std::cout<<"Goal altitude: "<<DesiredAltitude<<std::endl;
-  std::cout<<"Altitude relative to reference: "<<CurrentPose.altitude-goal_.uav_ref.altitude<<std::endl;
-  std::cout<<"Remaining distance: "<<DesiredAltitude-(CurrentPose.altitude)<<std::endl;*/
-  /*if(fabs(DesiredAltitude-(msg->altitude))<distance_threshold_ && fabs(msg->altitude-prev_alt_gps_)<distance_threshold_) {
-    success_gps_=true;
-  }
-  else{
-    success_gps_=false;
-  }
-  distance_to_goal_gps_=DesiredAltitude-msg->altitude;
-  if(t_prev_gps_.sec>0){
-    prev_alt_gps_=msg->altitude;
-  }*/
 }
 
 void check_takeoff_server::PoseCallback(const geometry_msgs::PoseStampedConstPtr& msg){
@@ -74,25 +57,6 @@ void check_takeoff_server::PoseCallback(const geometry_msgs::PoseStampedConstPtr
     prev_local_pose=curr_local_pose;
   }
   curr_local_pose=msg->pose;
-
-  //double DesiredAltitude=request_.goal_altitude+request_.uav_ref.z;
-
-  /*ROS_INFO("Current altitude over sea level: ");std::cout<<CurrentPose.altitude<<std::endl;
-  std::cout<<"Reference altitude: "<<goal_.uav_ref.altitude<<std::endl;
-  std::cout<<"Goal altitude: "<<DesiredAltitude<<std::endl;
-  std::cout<<"Altitude relative to reference: "<<CurrentPose.altitude-goal_.uav_ref.altitude<<std::endl;
-  std::cout<<"Remaining distance: "<<DesiredAltitude-(CurrentPose.altitude)<<std::endl;*/
-  /*distance_to_goal_local_=DesiredAltitude-msg->pose.position.z;
-  if(fabs(DesiredAltitude-(msg->pose.position.z))<distance_threshold_ && fabs(msg->pose.position.z-prev_alt_local_)<distance_threshold_) {
-
-    success_local_=true;
-  }
-  else{
-    success_local_=false;
-  }
-  if(t_prev_local_.sec>0){
-    prev_alt_local_=msg->pose.position.z;
-  }*/
 }
 bool check_takeoff_server::CheckTakeoff(mavros_offboard_control::Takeoff::Request &req,
                 mavros_offboard_control::Takeoff::Response &res){
@@ -108,14 +72,6 @@ bool check_takeoff_server::CheckTakeoff(mavros_offboard_control::Takeoff::Reques
     else{
       res.takeoff_completed=false;
     }
-
-    /*if(success_local_){
-
-    }
-    else{
-      res.takeoff_completed=false;
-    }*/
-
   }
   else {
     res.distance_to_goal=req.goal_altitude+req.uav_ref.z-curr_gps.altitude;
@@ -127,19 +83,12 @@ bool check_takeoff_server::CheckTakeoff(mavros_offboard_control::Takeoff::Reques
     else{
       res.takeoff_completed=false;
     }
-
-
-    /*if(success_gps_){
-      res.takeoff_completed=true;
-    }
-    else{
-      res.takeoff_completed=false;
-    }
-    res.distance_to_goal=distance_to_goal_gps_;*/
   }
 }
 void check_takeoff_server::Main_task(){
+  #ifdef DEBUG
   ROS_INFO_ONCE("Ready to check takeoff");
+  #endif
   while (ros::ok()) {
     ros::spinOnce();
     rate_.sleep();

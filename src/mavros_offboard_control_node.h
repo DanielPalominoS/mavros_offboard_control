@@ -194,6 +194,7 @@ public:
   ~mavros_offboard_control_node();
   void  main_task();
   double  calculate_height(double fl,double gsd,double sw,double iw);
+  double  calculate_gsd(double fl,double height,double sw,double iw);
   bool  wait_for_servers();
   //bool  waypoint_cb();
 

@@ -61,9 +61,9 @@ int main(int argc, char **argv)
 
     mavros_msgs::GlobalPositionTarget GlobalTargetPose;
     GlobalTargetPose.coordinate_frame=0;
-    GlobalTargetPose.altitude=535.276919+10;
-    GlobalTargetPose.latitude=47.3977919;
-    GlobalTargetPose.longitude=8.545594;
+    GlobalTargetPose.altitude=535.276919+120;
+    GlobalTargetPose.latitude=47.3977425;
+    GlobalTargetPose.longitude=8.5455935;
     //GlobalTargetPose.yaw=0;//1.570756;
     //GlobalTargetPose.yaw=1.570756;
     GlobalTargetPose.yaw=-1.570756;

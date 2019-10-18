@@ -144,7 +144,9 @@ void mavros_offboard_control_node::main_task(){
     ros::spinOnce();
     rate_.sleep();
   }
+  #ifdef DEBUG
   ROS_INFO_ONCE("Fcu connected");
+  #endif
   fcu_connected_=true;
   takeoff_done_flag_=false;
   bool  t1_measured=false;
@@ -183,18 +185,21 @@ void mavros_offboard_control_node::main_task(){
   takeoff_srv_.request.goal_altitude=takeoff_height_;
 
   //update Find crop features request
+  find_crop_srv_.request.gsd=calculate_gsd(focal_lenght_,takeoff_height_,s_width_,i_width_);
   find_crop_srv_.request.name="crop_features";
-  //find_crop_srv_.request.storage_path="/home/daniel/Pictures/planning/";
-  find_crop_srv_.request.storage_path="/home/nvidia/Pictures/planning/";
+  //find_crop_srv_.request.storage_path="/home/daniel/Pictures/planning";
+  find_crop_srv_.request.storage_path="/home/daniel/Pictures/planning";
   find_crop_srv_.request.save=true;
 
   //Update Take picture request
-  //save_pict_srv_.request.storage_path="/home/daniel/Pictures/planning/mosaicking/";
-  save_pict_srv_.request.storage_path="/home/nvidia/Pictures/planning/mosaicking/";
+  //save_pict_srv_.request.storage_path="/home/daniel/Pictures/planning/mosaicking";
+  save_pict_srv_.request.storage_path="/home/daniel/Pictures/planning/mosaicking";
 
   bool  wp_request_configured=false;
   mavros_msgs::GlobalPositionTarget Global_target_pose;
+  #ifdef DEBUG
   ROS_INFO_ONCE("Waiting until offboard mode enabling");
+  #endif
   while(ros::ok()){
     if(current_state_.mode=="OFFBOARD"){
       if(!current_state_.armed){
@@ -203,7 +208,9 @@ void mavros_offboard_control_node::main_task(){
       }
       if(!takeoff_done_flag_&&!plan_available_flag_){
         takeoff_client_.call(takeoff_srv_);
+        #ifdef DEBUG
         ROS_INFO_ONCE("None takeoff done nor plan available");
+        #endif
         local_pos_pub_.publish(pose);
         //local_pos_pub_.publish(TargetPose);
         if(takeoff_srv_.response.takeoff_completed){
@@ -221,6 +228,9 @@ void mavros_offboard_control_node::main_task(){
             //local_pos_pub_.publish(TargetPose);
             process_image_client_.call(find_crop_srv_);
             crop_found_flag_=find_crop_srv_.response.success;
+            //*********Added to test
+            std::cout<<std::boolalpha<<crop_found_flag_;
+            crop_found_flag_=false;
             local_pos_pub_.publish(pose);
             //local_pos_pub_.publish(TargetPose);
             if( crop_found_flag_){
@@ -228,15 +238,18 @@ void mavros_offboard_control_node::main_task(){
               t1_measured=false;
             }else{
                t2=ros::Time::now();
+               //*********Added to test
+               t1=t2;
                if(t2-t1>ros::Duration(timeout_)){
                  takeoff_done_flag_=true;
                  plan_available_flag_=false;
+                 #ifdef DEBUG
                  ROS_WARN("Takeoff was done but none crop was identified");
+                 #endif
                }
             }
             local_pos_pub_.publish(pose);
             //local_pos_pub_.publish(TargetPose);
-
           }
 
           else{
@@ -245,10 +258,13 @@ void mavros_offboard_control_node::main_task(){
               t1=ros::Time::now();
               t2=t1;
             }
+            std::cout<<std::setprecision(8)<<generate_plan_srv_.request<<std::endl;
             plan_flight_client_.call(generate_plan_srv_);
             plan_available_flag_=generate_plan_srv_.response.success;
             if( plan_available_flag_ ){
+              #ifdef DEBUG
               ROS_INFO("Plan generated succesfully.\nStarting execution");
+              #endif
               takeoff_done_flag_=true;
               wp_request_configured=false;
               current_wp_index_=0;
@@ -257,7 +273,9 @@ void mavros_offboard_control_node::main_task(){
               if(t2-t1>ros::Duration(timeout_)){
                 takeoff_done_flag_=true;
                 plan_available_flag_=false;
+                #ifdef DEBUG
                 ROS_WARN("Takeoff was done but none plan could be generated");
+                #endif
               }
             }
           }
@@ -267,7 +285,9 @@ void mavros_offboard_control_node::main_task(){
         //local_pos_pub_.publish(TargetPose);
       }
       else if(plan_available_flag_){
-        ROS_INFO_ONCE("Takeoff done and plan available");
+        #ifdef DEBUG
+        ROS_INFO("Degrees");
+        #endif
         //Update request
         double  factor=180.0/M_PI;
         if(!are_degrees_flag_){factor=1.0;}
@@ -281,9 +301,13 @@ void mavros_offboard_control_node::main_task(){
         if(!wp_request_configured){
           if(are_degrees_flag_){
             Global_target_pose.yaw=(90-des_yaw)/factor;//generate_plan_srv_.response.uav_heading[current_wp_index_];
+            #ifdef DEBUG
             ROS_INFO("Degrees");
+            #endif
           }else{
+            #ifdef DEBUG
             ROS_INFO("no degrees");
+            #endif
             Global_target_pose.yaw=M_PI/2-des_yaw;//generate_plan_srv_.response.uav_heading[current_wp_index_];
           }
           
@@ -297,10 +321,11 @@ void mavros_offboard_control_node::main_task(){
           Global_target_pose.velocity.y=10;
           Global_target_pose.type_mask=Global_target_pose.IGNORE_AFX+
               Global_target_pose.IGNORE_AFY+Global_target_pose.IGNORE_AFZ;
-
+          #ifdef DEBUG
           ROS_INFO("\n");
           std::cout<<"current heading(YAW) [deg]: "<<current_heding_.data<<std::endl;
           std::cout<<"desired heading(YAW) [deg]: "<<des_yaw<<std::endl;
+          #endif
 
           check_wp_srv_.request.uav_desired_gps=generate_plan_srv_.response.plan_gps_coors[current_wp_index_];
           check_wp_srv_.request.desired_heading=des_yaw;//generate_plan_srv_.response.uav_heading[current_wp_index_]*factor;// El angulo calculado por el planificador esta en radianes
@@ -405,7 +430,9 @@ void mavros_offboard_control_node::main_task(){
         set_mode_client_.call(set_mode_srv_);
       }
       else{
+        #ifdef DEBUG
         ROS_WARN("Changing to return home mode");
+        #endif
         set_mode_srv_.request.custom_mode="AUTO.RTL";
         set_mode_client_.call(set_mode_srv_);        
       }
@@ -501,9 +528,25 @@ double mavros_offboard_control_node::calculate_height(double fl,double gsd,doubl
    *FH=gsd*f*iw/sw;
    *
    * */
-  double  height;
+  double  height=0;
   height=gsd*fl*iw/sw;
   return  height;
+}
+double mavros_offboard_control_node::calculate_gsd(double fl, double height, double sw, double iw){
+  /****
+   * f: focal lenght
+   *gsd: ground sample distance
+   * iw: Image width
+   * sw: Sensor width
+   * Fh: flight height
+   *
+   *FH=gsd*f*iw/sw;
+   *
+   * */
+  double  gsd=0;
+  gsd=sw*height/(iw*fl);
+
+  return  gsd;
 }
 
 void  mavros_offboard_control_node::update_generate_plan_request(){
@@ -539,38 +582,61 @@ void  mavros_offboard_control_node::update_generate_plan_request(){
 bool  mavros_offboard_control_node::wait_for_servers(){
   bool success=false;
   if(!takeoff_client_.waitForExistence(ros::Duration(5.0))){
-    if(debug_flag_){ROS_WARN(" ");std::cout<<takeoff_client_.getService() <<"."<<std::endl;}
+    #ifdef DEBUG
+    ROS_WARN(" ");std::cout<<takeoff_client_.getService() <<"."<<std::endl;
+    #endif
     return false;
   }
-  if(debug_flag_){ROS_INFO_ONCE("takeoff server started.");}
+  #ifdef DEBUG
+  ROS_INFO_ONCE("takeoff server started.");
+  #endif
 
   if (!wp_control_client_.waitForExistence(ros::Duration(5.0))){
+    #ifdef DEBUG
     ROS_WARN("wp_control service not found");
+    #endif
     return false;
   }
+  #ifdef DEBUG
+  ROS_INFO_ONCE("takeoff server started.");
+  #endif
 
   if (!wp_control_client_.waitForExistence(ros::Duration(5.0))){
+    #ifdef DEBUG
     ROS_WARN("wp_control service not found");
+    #endif
     return false;
   }
-  if(debug_flag_){ROS_INFO_ONCE("Enable motor server started.");}
+  #ifdef DEBUG
+  ROS_INFO_ONCE("Enable motor server started.");
+  #endif
 
   if(!process_image_client_.waitForExistence(ros::Duration(5.0))){
+    #ifdef DEBUG
     ROS_WARN("Process image service not found");
+    #endif
     return false;
   }
-  if(debug_flag_){ROS_INFO_ONCE("Process image server started.");}
+  #ifdef DEBUG
+  ROS_INFO_ONCE("Process image server started.");
+  #endif
 
   if (!take_picture_client_.waitForExistence(ros::Duration(5.0))){
+    #ifdef DEBUG
     ROS_WARN("Take Photo service not found");
+    #endif
     return false;
   }
 
   if (!arming_client_.waitForExistence(ros::Duration(5.0))){
+    #ifdef DEBUG
     ROS_WARN("Uav arming service not found");
+    #endif
     return false;
   }
-  if(debug_flag_){ROS_INFO_ONCE("Arming server started.");}
+  #ifdef DEBUG
+  ROS_INFO_ONCE("Arming server started.");
+  #endif
 
   success=true;
 
@@ -584,7 +650,9 @@ int main(int argc, char **argv)
   ros::Time::init();
   mavros_offboard_control_node controller;
   while(ros::ok() && !controller.wait_for_servers()){
+    #ifdef DEBUG
     ROS_WARN_ONCE("Plese verify that all servers have been initialized");
+    #endif
   }
   controller.main_task();
   return 0;

@@ -19,7 +19,9 @@ check_waypoint_server::~check_waypoint_server(){
 
 }
 void check_waypoint_server::Main_task(){
+  #ifdef DEBUG
   ROS_INFO_ONCE("ready to check waypoints");
+  #endif
   while (ros::ok()) {
     ros::spinOnce();
     rate_.sleep();
@@ -49,13 +51,15 @@ bool  check_waypoint_server::check_wp_cb(mavros_offboard_control::Check_waypoint
   geod.Inverse(req.uav_current_gps.x*factor,req.uav_current_gps.y*factor,
                req.uav_desired_gps.x*factor,req.uav_desired_gps.y*factor,
                s12,azi1,azi2);
-
+  #ifdef DEBUG
   std::cout<<"\ndistxy [m]: "<<s12<<std::endl;
   std::cout<<"dist [m]: "<<res.distance<<std::endl;
   //std::cout<<"Azi1 [deg]: "<<azi1<<std::endl;
   //std::cout<<"Azi2 [deg]: "<<azi2<<std::endl;
   std::cout<<"current heading(YAW) [deg]: "<<req.current_heading*factor<<std::endl;
   std::cout<<"desired heading(YAW) [deg]: "<<req.desired_heading*factor<<std::endl;
+  #endif
+
   //std::cout<<"Steering angle [deg]: "<<res.remaining_angle<<std::endl;
   if(req.current_heading>180/factor){
     req.current_heading-=360/factor;
@@ -80,12 +84,16 @@ bool  check_waypoint_server::check_wp_cb(mavros_offboard_control::Check_waypoint
   }
   //res.azimuth=azi1/factor;
   //
+  #ifdef DEBUG
   std::cout<<"Factor : "<<factor<<" are_degrees : "<<req.are_degrees<<std::endl;
   std::cout<<"current heading(YAW) [deg]: "<<req.current_heading*factor<<std::endl;
   std::cout<<"desired heading(YAW) [deg]: "<<req.desired_heading*factor<<std::endl;
   std::cout<<"Steering angle [deg]: "<<res.remaining_angle*factor<<std::endl;
+  #endif
   //if(dist<req.distance_threshold&& res.remaining_angle<req.heading_angle_threshold*factor){
   if(res.distance<req.distance_threshold && fabs(res.remaining_angle*factor)<req.heading_angle_threshold*factor){
+    #ifdef DEBUG
+    #endif
     ROS_WARN("Waypoint reached\n");
     res.waypoint_reached=true;
   }
@@ -99,6 +107,8 @@ bool  check_waypoint_server::check_wp_cb(mavros_offboard_control::Check_waypoint
 
 int main(int argc, char** argv)
 {
+  #ifdef DEBUG
+  #endif
   std::setprecision (10);
   ros::init(argc, argv, "wp_server");
   check_waypoint_server waypoint_srvr=check_waypoint_server();
